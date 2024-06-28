@@ -2,6 +2,9 @@ import org_unit as ou
 
 def test_transform_org_unit_vde_to_skillaz():
     record = {
+        'id': 'b8746764-c6e0-4886-9fcd-7093ee3cc56e',
+        'record_name': ' Руководство ', 
+        'default_order': '1',
         'orgunitid': '70054048-87c5-4c07-94eb-bbff34e8eb5b',
         'name': ' Руководство ',
         'headid': '64a2cfa0-5651-448c-9e05-2af1afee9deb',
