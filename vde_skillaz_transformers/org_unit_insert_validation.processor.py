@@ -1,8 +1,8 @@
 from nifiapi.recordtransform import RecordTransformResult, RecordTransform
 
-from org_unit import validate_vde_org_unit_db_meta
+from org_unit import validate_vde_org_unit
 
-class OrgUnitSkillazRecordTransform(RecordTransform):
+class OrgUnitInsertValidation(RecordTransform):
     class Java:
         implements = ['org.apache.nifi.python.processor.RecordTransform']
 
@@ -14,7 +14,7 @@ class OrgUnitSkillazRecordTransform(RecordTransform):
         super().__init__()
 
     def transform(self, context, record, schema, attributemap):
-        err, transformed_record = validate_vde_org_unit_db_meta(record)
+        err, validated = validate_vde_org_unit(record)
         if err:
             return RecordTransformResult(record=record, relationship='failure')
-        return RecordTransformResult(record=transformed_record)
+        return RecordTransformResult(record=validated, relationship='success')

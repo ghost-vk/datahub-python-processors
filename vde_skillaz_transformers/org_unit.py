@@ -19,12 +19,24 @@ class OrgUnitVdeDbMeta(OrgUnitVde):
     record_name: Optional[str] = None
     default_order: Optional[int] = None
 
+def validate_vde_org_unit(record):
+    try:
+        validated = OrgUnitVde(**record)
+        return None, validated
+    except:
+        return 'record not valid', record
+
 def validate_vde_org_unit_db_meta(record):
-    validated = OrgUnitVdeDbMeta(**record)
-    return validated
+    try:
+        validated = OrgUnitVdeDbMeta(**record)
+        return None, validated
+    except:
+        return 'record not valid', record
 
 def transform_org_unit_vde_to_skillaz(record):
-    vde_record = validate_vde_org_unit_db_meta(record)
+    err, vde_record = validate_vde_org_unit_db_meta(record)
+    if err:
+        return err, None
     skillaz_record = {
         'Id': vde_record.orgunitid,
         'ExternalId': vde_record.orgunitid,
@@ -36,4 +48,13 @@ def transform_org_unit_vde_to_skillaz(record):
             'ExtraData.Manager': vde_record.heademail
         },
     }
-    return skillaz_record
+    return None, skillaz_record
+
+def transform_ort_unit_insert(record):
+    err, insert_record = validate_vde_org_unit(record)    
+    if err:
+        return err, None
+    insert_record = insert_record.model_dump()
+    insert_record['record_name'] = insert_record['name']
+    return None, insert_record
+    
