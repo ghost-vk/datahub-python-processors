@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError, field_validator, Conf
 import phonenumbers
 
 from pkg_types import WithError
+from utils import strip_dict
 
 class EmployeeStateEnum(str, Enum):
     active = 'Действующий'
@@ -36,19 +37,6 @@ class EmployeeGenderEnum(str, Enum):
     f = 'Женский'
 
 ValidatedPhoneNumber: TypeAlias = str
-
-def strip_dict(data: dict[str, Any]) -> WithError[dict[str, Any]]:
-    try:
-        stripped_dict = {}
-        for k, v in data.items():
-            if isinstance(v, str):
-                stripped_dict[k] = v.strip()
-            else:
-                stripped_dict[k] = v
-        return WithError(None, stripped_dict)
-    except Exception as e:
-        print(e)
-        return WithError('error strip dict', None)
 
 def validate_phone_number(phone: str, 
                           country_code: Optional[str] = 'RU') -> ValidatedPhoneNumber:
@@ -138,11 +126,7 @@ def validate_employee_vde(record: dict[str, Any]) -> WithError[PEmployeeVde]:
 
 def transform_employee_vde_insert(record: dict[str, Any]) -> WithError[EmployeeVdeInsert]:
     try: 
-        err_strip, strip_record = strip_dict(record)
-        if err_strip or strip_record is None:
-            return WithError(err_strip, None)
-        print('===\nstripped:\n')
-        print(strip_record)
+        strip_record = strip_dict(record)
         err, employee = validate_employee_vde(strip_record)
         if err or employee is None:
             err = err if err else 'error empty record'
