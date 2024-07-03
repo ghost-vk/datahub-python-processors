@@ -2,7 +2,7 @@ from typing import Any, Optional, TypedDict
 
 from pydantic import BaseModel, EmailStr, ValidationError
 
-from pkg_types import WithError
+from exceptions import TransformException
 
 class OrgUnitVde(BaseModel):
     orgunitid: str 
@@ -32,25 +32,6 @@ class OrgUnitVdeDbMeta(OrgUnitVde):
     record_name: Optional[str] = None
     default_order: Optional[int] = None
 
-def validate_vde_org_unit(record: dict[str, Any]) -> WithError[OrgUnitVde]:
-    try:
-        validated = OrgUnitVde(**record)
-        return WithError(None, validated)
-    except ValidationError:
-        return WithError('record not valid', None)
-    except Exception:
-        return WithError('unhandled error', None)
-
-
-def validate_vde_org_unit_db_meta(record: dict[str, Any]) -> WithError[OrgUnitVdeDbMeta]:
-    try:
-        validated = OrgUnitVdeDbMeta(**record)
-        return WithError(None, validated)
-    except ValidationError:
-        return WithError('record not valid', None)
-    except Exception:
-        return WithError('unhandled error', None)
-
 OrgUnitSkillazData = TypedDict('OrgUnitSkillazData', {
     'ExtraData.Manager': Optional[str]
 })
@@ -64,39 +45,38 @@ class OrgUnitSkillaz(TypedDict):
     IsArchived: bool
     Data: OrgUnitSkillazData
 
-def transform_org_unit_vde_to_skillaz(record: dict[str, Any]) -> WithError[OrgUnitSkillaz]:
-    err, vde_record = validate_vde_org_unit_db_meta(record)
-    if err or vde_record is None:
-        err = err if err else 'error empty record'
-        return WithError(err, None)
-    skillaz_record: OrgUnitSkillaz = {
-        'Id': vde_record.orgunitid,
-        'ExternalId': vde_record.orgunitid,
-        'Name': vde_record.name,
-        'ParentId': vde_record.superiorid,
-        'Address': vde_record.address,
-        'IsArchived': False,
-        'Data': {
-            'ExtraData.Manager': vde_record.heademail
-        },
-    }
-    return WithError(None, skillaz_record)
+def transform_org_unit_vde_to_skillaz(record: dict[str, Any]) -> OrgUnitSkillaz:
+    try:
+        validated = OrgUnitVdeDbMeta(**record)
+        skillaz_record: OrgUnitSkillaz = {
+            'Id': validated.orgunitid,
+            'ExternalId': validated.orgunitid,
+            'Name': validated.name,
+            'ParentId': validated.superiorid,
+            'Address': validated.address,
+            'IsArchived': False,
+            'Data': {
+                'ExtraData.Manager': validated.heademail,
+            },
+        }
+        return skillaz_record 
+    except ValidationError:
+        raise TransformException
 
-def transform_ort_unit_insert(record: dict[str, Any]) -> WithError[OrgUnitVdeInsertReady]:
-    err, validated = validate_vde_org_unit(record)    
-    if err or validated is None:
-        err = err if err else 'error empty record'
-        return WithError(err, None)
-    insert_record: OrgUnitVdeInsertReady = {
-        'record_name': validated.name,
-        'orgunitid': validated.orgunitid,
-        'name': validated.name,
-        'headid': validated.headid,
-        'heademail': validated.heademail,
-        'address': validated.address,
-        'superiorname': validated.superiorname,
-        'superiorid': validated.superiorid,
-        'flowuuid': validated.flowuuid,
-    }
-    return WithError(None, insert_record)
-    
+def transform_ort_unit_insert(record: dict[str, Any]) -> OrgUnitVdeInsertReady:
+    try:
+        validated = OrgUnitVde(**record)    
+        insert_record: OrgUnitVdeInsertReady = {
+            'record_name': validated.name,
+            'orgunitid': validated.orgunitid,
+            'name': validated.name,
+            'headid': validated.headid,
+            'heademail': validated.heademail,
+            'address': validated.address,
+            'superiorname': validated.superiorname,
+            'superiorid': validated.superiorid,
+            'flowuuid': validated.flowuuid,
+        }
+        return insert_record
+    except ValidationError:
+        raise TransformException

@@ -1,3 +1,6 @@
+import pytest
+
+from exceptions import TransformException
 import org_unit as ou
 
 def test_transform_org_unit_vde_to_skillaz():
@@ -13,9 +16,7 @@ def test_transform_org_unit_vde_to_skillaz():
         'superiorname': 'Сверхруководство',
         'superiorid': '113587e5-e3ce-4302-948b-309df04951e2',
     }
-    _, transformed = ou.transform_org_unit_vde_to_skillaz(record)
-    if not transformed:
-        raise ValueError('record not defined')
+    transformed = ou.transform_org_unit_vde_to_skillaz(record)
     assert transformed['Id'] == record['orgunitid'].strip()
     assert transformed['ExternalId'] == record['orgunitid'].strip()
     assert transformed['Name'] == record['name'].strip()
@@ -34,15 +35,13 @@ def test_validate_vde_org_unit():
         'superiorname': 'Сверхруководство',
         'superiorid': '113587e5-e3ce-4302-948b-309df04951e2',
     }
-    _, transformed = ou.transform_ort_unit_insert(record)
-    if not transformed:
-        raise ValueError('record not defined')
+    transformed = ou.transform_ort_unit_insert(record)
     assert transformed['record_name'] == record['name'].strip()
 
 def test_validate_vde_org_unit_fail_with_empty_dict():
     record = {}
-    err, _ = ou.transform_ort_unit_insert(record)
-    assert err == 'record not valid'
+    with pytest.raises(TransformException):
+        ou.transform_ort_unit_insert(record)
 
 def test_validate_vde_org_unit_fail_with_not_valid_record():
     record = {
@@ -54,8 +53,8 @@ def test_validate_vde_org_unit_fail_with_not_valid_record():
         'superiorname': 'Сверхруководство',
         'superiorid': '113587e5-e3ce-4302-948b-309df04951e2',
     }
-    err, _ = ou.transform_ort_unit_insert(record)
-    assert err == 'record not valid'
+    with pytest.raises(TransformException):
+        ou.transform_ort_unit_insert(record)
     record = {
         'orgunitid': None,
         'name': ' Руководство ',
@@ -65,5 +64,5 @@ def test_validate_vde_org_unit_fail_with_not_valid_record():
         'superiorname': 'Сверхруководство',
         'superiorid': '113587e5-e3ce-4302-948b-309df04951e2',
     }
-    err, _ = ou.transform_ort_unit_insert(record)
-    assert err == 'record not valid'
+    with pytest.raises(TransformException):
+        ou.transform_ort_unit_insert(record)
