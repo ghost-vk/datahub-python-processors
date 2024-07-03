@@ -66,7 +66,7 @@ class OrgUnitSkillaz(TypedDict):
 
 def transform_org_unit_vde_to_skillaz(record: dict[str, Any]) -> WithError[OrgUnitSkillaz]:
     err, vde_record = validate_vde_org_unit_db_meta(record)
-    if err or not vde_record:
+    if err or vde_record is None:
         err = err if err else 'error empty record'
         return WithError(err, None)
     skillaz_record: OrgUnitSkillaz = {
@@ -84,7 +84,7 @@ def transform_org_unit_vde_to_skillaz(record: dict[str, Any]) -> WithError[OrgUn
 
 def transform_ort_unit_insert(record: dict[str, Any]) -> WithError[OrgUnitVdeInsertReady]:
     err, validated = validate_vde_org_unit(record)    
-    if err or not validated:
+    if err or validated is None:
         err = err if err else 'error empty record'
         return WithError(err, None)
     insert_record: OrgUnitVdeInsertReady = {
