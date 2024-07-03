@@ -5,6 +5,7 @@ from enum import Enum
 from pydantic import BaseModel, EmailStr, ValidationError, field_validator, ConfigDict
 import phonenumbers
 
+from exceptions import TransformException
 from pkg_types import WithError
 from utils import strip_dict
 
@@ -38,20 +39,16 @@ class EmployeeGenderEnum(str, Enum):
 
 ValidatedPhoneNumber: TypeAlias = str
 
-def validate_phone_number(phone: str, 
-                          country_code: Optional[str] = 'RU') -> ValidatedPhoneNumber:
-    try:
-        maybe_phone = phonenumbers.parse(phone, country_code)
-        if phonenumbers.is_possible_number(maybe_phone):
-            return str(phonenumbers.format_number(
-                maybe_phone,
-                phonenumbers.PhoneNumberFormat.INTERNATIONAL)
-            )
-        raise ValueError('Phone Number Invalid.')
-    except ValueError as verr:
-        raise verr
-    except Exception:
-        raise ValueError('Phone Number parse error.')
+def validate_phone_number(
+    phone: str, country_code: Optional[str] = 'RU'
+) -> ValidatedPhoneNumber:
+    maybe_phone = phonenumbers.parse(phone, country_code)
+    if phonenumbers.is_possible_number(maybe_phone):
+        return str(phonenumbers.format_number(
+            maybe_phone,
+            phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+        )
+    raise TransformException('Phone Number Invalid.')
 
 class PEmployeeVde(BaseModel):
     workplaceaddress: Optional[str] = None
@@ -114,23 +111,10 @@ class EmployeeVdeInsert(TypedDict):
     flowuuid: Optional[str] 
     record_name: str
 
-def validate_employee_vde(record: dict[str, Any]) -> WithError[PEmployeeVde]:
-    try:
-        validated = PEmployeeVde(**record)
-        return WithError(None, validated)
-    except ValidationError as verr:
-        print(verr.errors())
-        return WithError('employee record not valid', None)
-    except Exception:
-        return WithError('employee record validation unhandled error', None)
-
-def transform_employee_vde_insert(record: dict[str, Any]) -> WithError[EmployeeVdeInsert]:
+def transform_employee_vde_insert(record: dict[str, Any]) -> EmployeeVdeInsert:
     try: 
         strip_record = strip_dict(record)
-        err, employee = validate_employee_vde(strip_record)
-        if err or employee is None:
-            err = err if err else 'error empty record'
-            return WithError(err, None)
+        employee = PEmployeeVde(**strip_record)
         insert_record: EmployeeVdeInsert = {
             'workplaceaddress': employee.workplaceaddress,
             'state': EmployeeStateUUIDEnum[employee.state.name] if employee.state else None,
@@ -154,9 +138,9 @@ def transform_employee_vde_insert(record: dict[str, Any]) -> WithError[EmployeeV
             'flowuuid':  employee.flowuuid,
             'record_name': employee.workemail,
         }
-        return WithError(None, insert_record)
-    except Exception:
-        return WithError('transform employee vde insert unhandled error', None)
+        return insert_record
+    except ValidationError:
+        raise TransformException
 
 class EmployeeSkillazInternationalPhoneNumber(TypedDict):
     PhoneNumber: ValidatedPhoneNumber
@@ -171,114 +155,3 @@ class EmployeeSkillaz(TypedDict):
     MiddleName: Optional[str]
     RoleIds: Optional[List[EmployeeRolesEnum]]
     InternationalPhoneNumber: Optional[EmployeeSkillazInternationalPhoneNumber]
-  # InternationalPhoneNumber: TypedDict()
-    #         z
-    # .object({
-    #   PhoneNumber: z.string().transform((val, ctx): null | string => {
-    #     return zodPhoneTransform(val, ctx, {
-    #       countryCode: 'RU',
-    #       withExt: false,
-    #       fieldName: 'InternationalPhoneNumber.PhoneNumber',
-    #     });
-    #   }),
-    #   AreaCode: z.enum(['7']),
-    #   CountryCode: z.enum(['RU']),
-    # })
-    # .nullable(),
-  # Position: z.string().trim().nullable(),
-  # EmployeeId: z
-  #   .string()
-  #   .trim()
-  #   .transform((val): null | string => {
-  #     if (!val) return null;
-  #     return val.replace(/[\s-]/g, '');
-  #   }),
-  # IsArchived: z
-  #   .boolean()
-  #   .nullable()
-  #   .optional()
-  #   .transform((_): boolean => {
-  #     if (_ === undefined || _ === null) return false;
-  #     return _;
-  #   }),
-  # Data: z.object({
-  #   'ExtraData.gender': z
-  #     .string()
-  #     .min(1)
-  #     .nullable()
-  #     .transform((_, ctx): null | 'м' | 'ж' | 'm' | 'f' => {
-  #       if (_ === null) return null;
-  #       const firstChar = _.charAt(0).toLowerCase();
-  #       if (!['м', 'ж', 'f', 'm'].includes(firstChar)) {
-  #         ctx.addIssue({
-  #           code: z.ZodIssueCode.custom,
-  #           message: `Bad gender value [${_}], expected first char to be one of ['м', 'ж', 'm', 'f']`,
-  #         });
-  #       }
-  #       return firstChar as 'м' | 'ж' | 'f' | 'm';
-  #     }),
-  #   'ExtraData.WorkPhoneNumber': z
-  #     .string()
-  #     .nullable()
-  #     .transform((val, ctx): null | string =>
-  #       zodPhoneTransform(val, ctx, {
-  #         countryCode: 'RU',
-  #         withExt: true,
-  #         fieldName: 'ExtraData.WorkPhoneNumber',
-  #       }),
-  #     ),
-  #   'ExtraData.SNILS': z
-  #     .string()
-  #     .trim()
-  #     .nullable()
-  #     .transform((val) => {
-  #       if (!val) return null;
-  #       return val.replace(/[\s-]/g, '');
-  #     }),
-  #   'ExtraData.PositionId': z.string().trim().nullable(),
-  #   'ExtraData.FunctionalManager': z.string().trim().toLowerCase().email().nullable(),
-  #   'ExtraData.city': z.string().trim().nullable(),
-  #   'ExtraData.WorkFunction': z.string().trim().nullable(),
-  #   'ExtraData.State': z.enum(['Действующий', 'На больничном', 'Уволен', 'Декрет']).nullable(),
-  #   'ExtraData.department_external_ids': z.array(z.string().trim()).nullable(),
-  #   'ExtraData.date_of_hire_job_position': z.coerce.date().nullable(),
-  #   'ExtraData.date_of_hire': z.coerce.date().nullable(),
-  #   'ExtraData.date_of_birth': z.coerce.date().nullable(),
-  # }),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -25,8 +25,7 @@ def test_transform_employee_vde_insert_valid_case():
         'dateofbirth': None,
         'flowuuid': '34f5aced-d03d-4fa3-8105-ec8fcb3ff8c1',
     }
-    err, rec = e.transform_employee_vde_insert(record)
-    assert err is None
+    rec = e.transform_employee_vde_insert(record)
     assert rec == {
         'workplaceaddress': 'Москва',
         'state': '9c306aec-b4dc-4e26-9724-be024fe4d194',
