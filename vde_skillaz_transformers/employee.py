@@ -6,7 +6,6 @@ from pydantic import BaseModel, EmailStr, ValidationError, field_validator, Conf
 import phonenumbers
 
 from exceptions import TransformException
-from pkg_types import WithError
 from utils import strip_dict
 
 class EmployeeStateEnum(str, Enum):
