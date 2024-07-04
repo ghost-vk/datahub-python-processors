@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError, field_validator, Conf
 import phonenumbers
 
 from exceptions import TransformException
-from utils import strip_dict
+from utils import strip_dict_strings
 
 class EmployeeStateEnum(str, Enum):
     active = 'Действующий'
@@ -112,7 +112,7 @@ class EmployeeVdeInsert(TypedDict):
 
 def transform_employee_vde_insert(record: dict[str, Any]) -> EmployeeVdeInsert:
     try: 
-        strip_record = strip_dict(record)
+        strip_record = strip_dict_strings(record)
         employee = PEmployeeVde(**strip_record)
         insert_record: EmployeeVdeInsert = {
             'workplaceaddress': employee.workplaceaddress,
