@@ -2,7 +2,7 @@ from nifiapi.recordtransform import RecordTransformResult, RecordTransform
 
 from org_unit import validate_vde_org_unit
 
-class OrgUnitInsertValidation(RecordTransform):
+class OrgUnitInsertTransform(RecordTransform):
     class Java:
         implements = ['org.apache.nifi.python.processor.RecordTransform']
 
