@@ -141,8 +141,8 @@ class PEmployeeVdeMeta(BaseModel):
     
 class EmployeeVdeInsert(TypedDict):
     workplaceaddress: Optional[str]
-    state: Optional[EmployeeStateUUIDEnum]
-    gender: EmployeeGenderEnum
+    state: Optional[str]
+    gender: str
     workemail: str
     phone: Optional[ValidatedPhoneNumber] 
     workphone: Optional[ValidatedPhoneNumber] 
@@ -156,11 +156,14 @@ class EmployeeVdeInsert(TypedDict):
     workfunc: Optional[str] 
     orgunitid: Optional[str] 
     orgunitname: Optional[str] 
-    datejobassignment: Optional[datetime] 
-    dateorgentry: Optional[datetime] 
-    dateofbirth: Optional[datetime] 
+    datejobassignment: Optional[float] 
+    dateorgentry: Optional[float] 
+    dateofbirth: Optional[float] 
     flowuuid: Optional[str] 
     record_name: str
+
+def _timestamp_or_none(t: datetime | None = None) -> float | None:
+    return t.timestamp() if t else None
 
 def transform_employee_vde_insert(record: dict[str, Any]) -> EmployeeVdeInsert:
     try: 
@@ -168,9 +171,9 @@ def transform_employee_vde_insert(record: dict[str, Any]) -> EmployeeVdeInsert:
         employee = PEmployeeVde(**strip_record)
         insert_record: EmployeeVdeInsert = {
             'workplaceaddress': employee.workplaceaddress,
-            'state': EmployeeStateUUIDEnum[employee.state.name] 
+            'state': EmployeeStateUUIDEnum[employee.state.name].value 
                 if employee.state else None,
-            'gender': employee.gender,
+            'gender': employee.gender.value,
             'workemail': employee.workemail,
             'phone':  employee.phone,
             'workphone':  employee.workphone,
@@ -184,9 +187,9 @@ def transform_employee_vde_insert(record: dict[str, Any]) -> EmployeeVdeInsert:
             'workfunc':  employee.workfunc,
             'orgunitid':  employee.orgunitid,
             'orgunitname':  employee.orgunitname,
-            'datejobassignment':  employee.datejobassignment,
-            'dateorgentry':  employee.dateorgentry,
-            'dateofbirth':  employee.dateofbirth,
+            'datejobassignment':  _timestamp_or_none(employee.datejobassignment),
+            'dateorgentry':  _timestamp_or_none(employee.dateorgentry),
+            'dateofbirth':  _timestamp_or_none(employee.dateofbirth),
             'flowuuid':  employee.flowuuid,
             'record_name': employee.workemail,
         }

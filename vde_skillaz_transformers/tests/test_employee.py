@@ -47,7 +47,7 @@ def test_transform_employee_vde_insert_valid_case():
         'workfunc': 'Администрирование \n1C системы',
         'orgunitid': 'ff7cbb2b-3951-4329-a736-c4800ae62ceb',
         'orgunitname': 'Управление 1С системами',
-        'datejobassignment': datetime.datetime.fromtimestamp(1404299569, datetime.timezone.utc),
+        'datejobassignment': 1404299569.0,
         'dateorgentry': None,
         'dateofbirth': None,
         'flowuuid': '34f5aced-d03d-4fa3-8105-ec8fcb3ff8c1',
