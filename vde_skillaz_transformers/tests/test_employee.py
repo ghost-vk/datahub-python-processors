@@ -88,7 +88,7 @@ def test_transform_employee_skillaz_valid_case():
         'LastName': 'Иванов',
         'FirstName': 'Петр',
         'MiddleName': None,
-        'RoleIds': [e.EmployeeRolesEnum.user],
+        'RoleIds': [e.EmployeeRolesEnum.user.value],
         'InternationalPhoneNumber': {
             'PhoneNumber': '+7 988 777-66-55',
             'AreaCode': '+7',
@@ -107,7 +107,7 @@ def test_transform_employee_skillaz_valid_case():
             'ExtraData.WorkFunction': 'Администрирование \n1C системы',
             'ExtraData.State': e.EmployeeStateEnum.sick.value,
             'ExtraData.department_external_ids': ['ff7cbb2b-3951-4329-a736-c4800ae62ceb'],
-            'ExtraData.date_of_hire_job_position': '2014-07-02T11:12:49+00:00',
+            'ExtraData.date_of_hire_job_position': 1404299569.0,
             'ExtraData.date_of_hire': None,
             'ExtraData.date_of_birth': None},
         }

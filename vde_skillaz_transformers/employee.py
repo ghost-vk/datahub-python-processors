@@ -214,9 +214,9 @@ EmployeeSkillazData = TypedDict('EmployeeSkillazData', {
     'ExtraData.State': Optional[str],
     'ExtraData.department_external_ids': Optional[list[str]],
     # datetime in iso8601 format
-    'ExtraData.date_of_hire_job_position': Optional[str],
-    'ExtraData.date_of_hire': Optional[str],
-    'ExtraData.date_of_birth': Optional[str],
+    'ExtraData.date_of_hire_job_position': Optional[float],
+    'ExtraData.date_of_hire': Optional[float],
+    'ExtraData.date_of_birth': Optional[float],
 })
 
 class EmployeeSkillaz(TypedDict):
@@ -274,9 +274,6 @@ def _transform_state_uuids_to_names(input: str | None) -> str | None:
     states = _split_state_uuids(input)
     return _map_state_values(states)[0]
 
-def _datetime_to_iso_or_none(_datetime: datetime | None=None) -> str | None:
-    return _datetime.isoformat() if _datetime else None
-
 def _format_phone_ru_international(phone: ValidatedPhoneNumber | None) -> EmployeeSkillazInternationalPhoneNumber | None:
         if phone is None:
             return None
@@ -317,9 +314,9 @@ def transform_employee_skillaz(record: dict[str, Any]) -> EmployeeSkillaz:
                 'ExtraData.department_external_ids': [validated.orgunitid] 
                     if validated.orgunitid else None,
                 'ExtraData.date_of_hire_job_position':
-                    _datetime_to_iso_or_none(validated.datejobassignment),
-                'ExtraData.date_of_hire': _datetime_to_iso_or_none(validated.dateorgentry),
-                'ExtraData.date_of_birth': _datetime_to_iso_or_none(validated.dateofbirth),
+                    _timestamp_or_none(validated.datejobassignment),
+                'ExtraData.date_of_hire': _timestamp_or_none(validated.dateorgentry),
+                'ExtraData.date_of_birth': _timestamp_or_none(validated.dateofbirth),
             }
         }
         return employee_skillaz
