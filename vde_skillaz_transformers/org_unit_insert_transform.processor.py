@@ -1,6 +1,7 @@
 from nifiapi.recordtransform import RecordTransformResult, RecordTransform
 
-from org_unit import validate_vde_org_unit
+from org_unit import transform_ort_unit_insert
+from exceptions import TransformException
 
 class OrgUnitInsertTransform(RecordTransform):
     class Java:
@@ -14,7 +15,11 @@ class OrgUnitInsertTransform(RecordTransform):
         super().__init__()
 
     def transform(self, context, record, schema, attributemap):
-        err, validated = validate_vde_org_unit(record)
-        if err:
+        try:
+            transformed = transform_ort_unit_insert(record)
+            return RecordTransformResult(record=transformed)
+        except TransformException:
             return RecordTransformResult(record=record, relationship='failure')
-        return RecordTransformResult(record=validated, relationship='success')
+        except Exception as e:
+            self.logger.warn('Unhandled Error in OrgUnitInsertTransform. ' + repr(e))
+            return RecordTransformResult(record=record, relationship='failure')

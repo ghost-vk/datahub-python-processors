@@ -14,11 +14,11 @@ class EmployeeInsertTransform(RecordTransform):
     def __init__(self, **kwargs):
         super().__init__()
 
-    def transform(self, context, record, schema, attributemap):
+    def transform(self, ctx, record, schema, attributemap):
         try:
             transformed = transform_employee_vde_insert(record)
             return RecordTransformResult(record=transformed)
-        except TransformException:
+        except TransformException as e:
             return RecordTransformResult(record=record, relationship='failure')
         except Exception as e:
             self.logger.warn('Unhandled Error in EmployeeInsertTransform. ' + repr(e))
